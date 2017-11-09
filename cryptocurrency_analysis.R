@@ -1,18 +1,18 @@
 todays_date = format(Sys.Date(), "%Y%m%d")
 formatted_date = format(Sys.Date(), "%b-%d-%Y")
-input <- paste("https://coinmarketcap.com/currencies/bitcoin/historical-data/?start=20130428&end=", toString(todays_date), sep = "")
-setwd("C:\\Users\\shubh\\Documents\\Coursera\\kaggle")
+
+#enter your working directory here
+wd <- "C:\\Users\\shubh\\Documents\\GitHub\\bitcoin_data"
+
+setwd(wd)
 dir.create(formatted_date)
-setwd(paste("C:\\Users\\shubh\\Documents\\Coursera\\kaggle\\", formatted_date, sep = ""))
-thepage = readLines(input)
-write(thepage, "bitcoin.txt")
 
 
 
-txt_list <- unlist(strsplit(thepage, "\n"))
-
+txt_list <- unlist(strsplit(readLines("https://coinmarketcap.com/currencies/bitcoin/historical-data/?start=20130428&end=20171105"), "\n"))
 start_of_data <- grep("<tbody>", txt_list) + 3
 end_of_data <- grep("/tbody", txt_list)
+
 
 find_date <- function(txt_list) {
     list_of_dates = list()
@@ -99,33 +99,35 @@ find_market <- function(txt_list) {
 
 #list_market_price = find_market()
 
-cryptocurrencies <- function() {
-    website <- "https://coinmarketcap.com/all/views/all/"
-    html_text <- readLines(website)
-    crypto_list <- unlist(strsplit(html_text, "\n"))
-    write(html_text, "crypto.txt")
-    return(crypto_list)
-    
-}
+# cryptocurrencies <- function() {
+#     website <- "https://coinmarketcap.com/all/views/all/"
+#     html_text <- readLines(website)
+#     crypto_list <- unlist(strsplit(html_text, "\n"))
+#     write(html_text, "crypto.txt")
+#     return(crypto_list)
+#     
+# }
+# 
+# get_currencies <- function() {
+#     crypto_list <- cryptocurrencies()
+#     crypto_list <- unlist(crypto_list)
+#     library(qdapRegex)
+#     list_of_currencies = list()
+#     start <- which(grepl("bitcoin", crypto_list),arr.ind = TRUE)[4]
+#     for (i in seq(from=start, to=(start+ 400) - 1, by=40)){
+#         list_of_currencies <- c(list_of_currencies, rm_between(crypto_list[i], "\">", "</a>", extract = TRUE)[[1]])
+#     }
+#     print(list_of_currencies)
+#     return(unlist(list_of_currencies))
+# }
 
-get_currencies <- function() {
-    crypto_list <- cryptocurrencies()
-    crypto_list <- unlist(crypto_list)
-    library(qdapRegex)
-    list_of_currencies = list()
-    start <- which(grepl("bitcoin", crypto_list),arr.ind = TRUE)[4]
-    for (i in seq(from=start, to=(start+ 400) - 1, by=40)){
-        list_of_currencies <- c(list_of_currencies, rm_between(crypto_list[i], "\">", "</a>", extract = TRUE)[[1]])
-    }
-    print(list_of_currencies)
-    return(unlist(list_of_currencies))
-}
-
-list_of_currencies <- get_currencies()
+list_of_currencies <- c("Bitcoin", "Ethereum", "Dash", "Bitcoin-Cash", "Ethereum-Classic", "LiteCoin", "Monero", "Ripple", "NEM", "NEO")
 
 get_df <- function(website){
     thepage <- readLines(website)
     txt_list <- unlist(strsplit(thepage, "\n"))
+    start_of_data <- grep("<tbody>", txt_list) + 3
+    end_of_data <- grep("/tbody", txt_list)
     list_dates <- find_date(txt_list)
     list_open_price <- find_open(txt_list)
     list_high_price<- find_high(txt_list)
@@ -144,12 +146,12 @@ df <- get_df(input)
 
 
 write_csv <- function() {
-    list_of_currencies <- get_currencies()
+    #list_of_currencies <- get_currencies()
     todays_date = format(Sys.Date(), "%Y%m%d")
     formatted_date = format(Sys.Date(), "%b-%d-%Y")
-    setwd("C:\\Users\\shubh\\Documents\\Coursera\\kaggle")
+    setwd(wd)
     #dir.create(formatted_date)
-    setwd(paste("C:\\Users\\shubh\\Documents\\Coursera\\kaggle\\", formatted_date, sep = ""))
+    setwd(paste(wd, "\\", formatted_date, sep = ""))
     for (i in seq(from = 1, to = length(list_of_currencies), by = 1)){
         list_of_currencies[i] <- gsub(" ", "-", list_of_currencies[i])
         csv_name <- paste(list_of_currencies[i], ".csv", sep = "")
@@ -163,6 +165,7 @@ write_csv <- function() {
 }
 write_csv()
 
+setwd(paste(wd, "\\", formatted_date, sep = ""))
 bitcoin_price <- read.csv("Bitcoin.csv")
 
 
@@ -170,3 +173,4 @@ bitcoin_price$Date<- as.Date(bitcoin_price$Date, format = "%b %d, %Y")
 
 library(plotly)
 p <- plot_ly(bitcoin_price, x = ~bitcoin_price$Date, y = ~bitcoin_price$Open, name = 'Price in $', type = 'scatter', mode = 'lines')
+p
