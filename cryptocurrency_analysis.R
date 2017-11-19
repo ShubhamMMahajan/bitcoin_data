@@ -11,8 +11,8 @@ dir.create(formatted_date)
 
 txt_list <- unlist(strsplit(readLines("https://coinmarketcap.com/currencies/bitcoin/historical-data/?start=20130428&end=20171105"), "\n"))
 start_of_data <- grep("<tbody>", txt_list) + 3
-end_of_data <- grep("/tbody", txt_list)
-
+#end_of_data <- grep("/tbody", txt_list)
+end_of_data <- grep("Jan 01, 2017", txt_list) + 9
 
 find_date <- function(txt_list) {
     list_of_dates = list()
@@ -171,6 +171,41 @@ bitcoin_price <- read.csv("Bitcoin.csv")
 
 bitcoin_price$Date<- as.Date(bitcoin_price$Date, format = "%b %d, %Y")
 
+x <- list(
+    title = "Date"
+    
+)
+y <- list(
+    title = "Price in $"
+    
+)
+
 library(plotly)
-p <- plot_ly(bitcoin_price, x = ~bitcoin_price$Date, y = ~bitcoin_price$Open, name = 'Price in $', type = 'scatter', mode = 'lines')
+#open_squared <- bitcoin_price$Open
+low = 99999999999999999999999999999999
+
+low_index = 0
+for (i in seq(from=0, to=2, by = 0.01)){
+    #print(i)
+    exponent <- i
+    model <- lm(Open^(exponent) + 1000 ~ as.numeric(Date), data = bitcoin_price)
+    
+    print(sum((predict(model) - bitcoin_price$Open)^2))
+    if (sum((predict(model) - bitcoin_price$Open)^2) < low){
+        low = sum((predict(model) - bitcoin_price$Open)^2)
+        low_index = i
+        print(i)
+    }
+}
+print(low_index)
+
+
+
+model <- lm(Open^(low_index) + 1000 ~ as.numeric(Date), data = bitcoin_price)
+
+#model <- lm(formula = Date ~ Open, data = bitcoin_price)
+p <- plot_ly(bitcoin_price, x = ~bitcoin_price$Date, y = ~bitcoin_price$Open, name = 'Price in $', type = 'scatter', mode = 'lines') %>%
+         add_lines(y = predict(model), name = "Predicted Price")
+    
+
 p
