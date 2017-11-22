@@ -1,1 +1,2 @@
-# bitcoin_data
+This program scrapes various cryptocurrency prices from this website https://coinmarketcap.com/currencies/bitcoin/historical-data/?start=20130428&end=20171122  
+In this R program I created an exponential regression model for the bitcoin data set.  
